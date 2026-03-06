@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
 import Header from './Header';
 import Footer from './Footer';
-import LoadingScreen from '../LoadingScreen';
-import FluidBackground from '../FluidBackground';
+import LiquidBackground from '../LiquidBackground';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,9 +9,8 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col text-white relative selection:bg-[#6E60EE] selection:text-white">
-      <LoadingScreen />
-      <FluidBackground />
+    <div className="min-h-screen flex flex-col text-warm-white relative">
+      <LiquidBackground />
       <Header />
       <main className="flex-grow relative z-10">
         {children}

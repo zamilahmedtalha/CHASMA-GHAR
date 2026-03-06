@@ -1,113 +1,194 @@
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useEffect, useRef } from 'react';
 
-const fragmentShader = `
-uniform float u_time;
-uniform vec2 u_resolution;
-varying vec2 vUv;
-
-// Simplex 2D noise
-vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
-float snoise(vec2 v){
-  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-           -0.577350269189626, 0.024390243902439);
-  vec2 i  = floor(v + dot(v, C.yy) );
-  vec2 x0 = v -   i + dot(i, C.xx);
-  vec2 i1;
-  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-  i = mod(i, 289.0);
-  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-  + i.x + vec3(0.0, i1.x, 1.0 ));
-  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
-    dot(x12.zw,x12.zw)), 0.0);
-  m = m*m ;
-  m = m*m ;
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
-}
-
-void main() {
-    vec2 uv = vUv;
-    
-    // Add some fluid distortion
-    float noise1 = snoise(uv * 3.0 + u_time * 0.2);
-    float noise2 = snoise(uv * 2.0 - u_time * 0.15 + noise1 * 0.5);
-    
-    vec2 distortedUv = uv + vec2(noise1, noise2) * 0.2;
-    
-    // Leonardo.ai style colors (deep purples, pinks, dark blues)
-    vec3 color1 = vec3(0.05, 0.02, 0.1); // Deep dark purple
-    vec3 color2 = vec3(0.43, 0.38, 0.93); // #6E60EE (Leonardo primary)
-    vec3 color3 = vec3(0.1, 0.05, 0.2); // Darker purple
-    
-    float mix1 = snoise(distortedUv * 2.0 + u_time * 0.1);
-    float mix2 = snoise(distortedUv * 4.0 - u_time * 0.2);
-    
-    vec3 finalColor = mix(color1, color2, smoothstep(-1.0, 1.0, mix1));
-    finalColor = mix(finalColor, color3, smoothstep(-1.0, 1.0, mix2) * 0.5);
-    
-    gl_FragColor = vec4(finalColor, 1.0);
-}
-`;
-
-const vertexShader = `
-varying vec2 vUv;
-void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`;
-
-function FluidPlane() {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-
-  const uniforms = useMemo(
-    () => ({
-      u_time: { value: 0 },
-      u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-    }),
-    []
-  );
-
-  useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.u_time.value = state.clock.elapsedTime;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef}>
-      <planeGeometry args={[2, 2]} />
-      <shaderMaterial
-        ref={materialRef}
-        fragmentShader={fragmentShader}
-        vertexShader={vertexShader}
-        uniforms={uniforms}
-        depthWrite={false}
-        depthTest={false}
-      />
-    </mesh>
-  );
-}
+// Using the exact configuration provided by the user
+const config = {
+  colors: [
+    { color: '#130437', enabled: true },
+    { color: '#B34BD0', enabled: true },
+    { color: '#210751', enabled: true },
+    { color: '#3511A5', enabled: true },
+    { color: '#8F3E8D', enabled: false },
+    { color: '#FF9A9E', enabled: false },
+  ],
+  speed: 4,
+  horizontalPressure: 7,
+  verticalPressure: 3,
+  waveFrequencyX: 0,
+  waveFrequencyY: 0,
+  waveAmplitude: 0,
+  shadows: 4,
+  highlights: 0,
+  colorBrightness: 1.95,
+  colorSaturation: 2,
+  wireframe: false,
+  colorBlending: 9,
+  backgroundColor: '#003FFF',
+  backgroundAlpha: 1,
+  grainScale: 6,
+  grainSparsity: 0,
+  grainIntensity: 0.125,
+  grainSpeed: 0,
+  resolution: 1.15,
+  yOffset: 16,
+  yOffsetWaveMultiplier: 4.5,
+  yOffsetColorMultiplier: 4.8,
+  yOffsetFlowMultiplier: 5.2,
+  flowDistortionA: 0.4,
+  flowDistortionB: 10,
+  flowScale: 3.3,
+  flowEase: 0.37,
+  flowEnabled: true,
+  mouseDistortionStrength: 0.15,
+  mouseDistortionRadius: 0.4,
+  mouseDecayRate: 0.96,
+  mouseDarken: 0.24,
+  enableProceduralTexture: false,
+  textureVoidLikelihood: 0.06,
+  textureVoidWidthMin: 10,
+  textureVoidWidthMax: 500,
+  textureBandDensity: 0.8,
+  textureColorBlending: 0.06,
+  textureSeed: 333,
+  textureEase: 0.38,
+  proceduralBackgroundColor: '#003FFF',
+  textureShapeTriangles: 20,
+  textureShapeCircles: 15,
+  textureShapeBars: 15,
+  textureShapeSquiggles: 10,
+};
 
 export default function FluidBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let time = 0;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Active colors from config
+    const activeColors = config.colors.filter(c => c.enabled).map(c => c.color);
+
+    // Helper to convert hex to RGB
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    };
+
+    const colorRgb = activeColors.map(hexToRgb);
+    const bgRgb = hexToRgb(config.backgroundColor);
+
+    // A simplified 2D canvas approximation of the WebGL fluid shader
+    // Since we don't have the full WebGL shader source, we simulate the fluid blobs and grain
+    const render = () => {
+      time += config.speed * 0.005;
+
+      // Fill background
+      ctx.fillStyle = `rgba(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b}, ${config.backgroundAlpha})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw fluid blobs
+      ctx.globalCompositeOperation = 'source-over';
+      
+      const drawBlob = (x: number, y: number, radius: number, colorIdx: number, tOffset: number) => {
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        const c = colorRgb[colorIdx % colorRgb.length];
+        gradient.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${0.8 * config.colorBrightness})`);
+        gradient.addColorStop(1, `rgba(${c.r}, ${c.g}, ${c.b}, 0)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const baseRadius = Math.max(w, h) * 0.6;
+
+      // Simulate fluid distortion and flow
+      const flowX = Math.sin(time * config.flowEase) * config.flowDistortionA * w;
+      const flowY = Math.cos(time * config.flowEase) * config.flowDistortionB * h * 0.1;
+
+      drawBlob(
+        w * 0.2 + Math.sin(time + 0) * w * 0.3 + flowX,
+        h * 0.2 + Math.cos(time + 1) * h * 0.3 + flowY,
+        baseRadius * 1.2,
+        0,
+        time
+      );
+
+      drawBlob(
+        w * 0.8 + Math.sin(time + 2) * w * 0.3 - flowX,
+        h * 0.8 + Math.cos(time + 3) * h * 0.3 - flowY,
+        baseRadius * 1.4,
+        1,
+        time
+      );
+
+      drawBlob(
+        w * 0.5 + Math.sin(time + 4) * w * 0.4 + flowX * 0.5,
+        h * 0.5 + Math.cos(time + 5) * h * 0.4 + flowY * 0.5,
+        baseRadius * 1.1,
+        2,
+        time
+      );
+
+      drawBlob(
+        w * 0.1 + Math.sin(time + 6) * w * 0.2 - flowX * 0.8,
+        h * 0.9 + Math.cos(time + 7) * h * 0.2 + flowY * 0.8,
+        baseRadius * 1.3,
+        3,
+        time
+      );
+
+      ctx.globalCompositeOperation = 'source-over';
+
+      // Apply grain
+      if (config.grainIntensity > 0) {
+        // We use a CSS filter for grain instead of canvas pixel manipulation for performance
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[-1] bg-black">
-      <Canvas camera={{ position: [0, 0, 1] }} gl={{ antialias: false }}>
-        <FluidPlane />
-      </Canvas>
-      <div className="absolute inset-0 z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
+    <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-[#003FFF]">
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+        style={{ filter: `saturate(${config.colorSaturation}) blur(${10 - config.colorBlending}px)` }}
+      />
+      {/* SVG Noise Filter for Grain */}
+      <div 
+        className="absolute inset-0 opacity-[0.125] mix-blend-overlay pointer-events-none"
+        style={{ 
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")',
+          transform: `scale(${config.grainScale / 2})`
+        }}
+      />
     </div>
   );
 }

@@ -94,14 +94,14 @@ export default function AiDesigner() {
   };
 
   return (
-    <div className="bg-black min-h-screen pt-32 pb-20 text-white">
+    <div className="bg-off-black min-h-screen pt-32 pb-20 font-sans">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-7xl tracking-tighter font-bold mb-6">
-              AI Design Lab.
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight mb-4">
+              AI <span className="text-gradient">Design Lab</span>
             </h1>
-            <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-lg text-warm-white/70">
               Generate infinite variations of premium eyewear and fluid backgrounds using our advanced AI models.
             </p>
           </div>
@@ -109,33 +109,33 @@ export default function AiDesigner() {
           <div className="flex justify-center gap-4 mb-8">
             <button
               onClick={() => setActiveTab('image')}
-              className={`px-6 py-3 rounded-full font-medium transition-all ${activeTab === 'image' ? 'bg-white text-black' : 'glass-panel text-zinc-400 hover:text-white'}`}
+              className={`px-6 py-3 rounded-full font-display font-bold transition-all ${activeTab === 'image' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
             >
               Nano Banana Pro (Images)
             </button>
             <button
               onClick={() => setActiveTab('video')}
-              className={`px-6 py-3 rounded-full font-medium transition-all ${activeTab === 'video' ? 'bg-white text-black' : 'glass-panel text-zinc-400 hover:text-white'}`}
+              className={`px-6 py-3 rounded-full font-display font-bold transition-all ${activeTab === 'video' ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
             >
               Veo 3 (Video Backgrounds)
             </button>
           </div>
 
-          <div className="glass-panel rounded-3xl p-8 mb-12">
+          <div className="glassmorphism-dark rounded-3xl p-8 border border-white/5 mb-12">
             <div className="flex flex-col gap-4">
-              <label className="text-sm font-medium text-zinc-400 uppercase tracking-widest">
+              <label className="text-sm font-medium text-warm-white/70 uppercase tracking-wider font-display">
                 {activeTab === 'image' ? 'Describe your dream glasses' : 'Describe your fluid 3D background'}
               </label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                className="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-white/30 transition-colors resize-none h-32"
+                className="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-warm-white focus:outline-none focus:border-magenta-neon transition-colors resize-none h-32"
                 placeholder={activeTab === 'image' ? "e.g., A pair of sleek titanium aviators with rose gold lenses..." : "e.g., A 3D fluid metallic purple and pink liquid constantly moving, 8k resolution..."}
               />
               <button
                 onClick={activeTab === 'image' ? handleGenerateImage : handleGenerateVideo}
                 disabled={isGenerating}
-                className="btn-primary w-full py-4 flex items-center justify-center gap-2 font-bold text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-alpha w-full py-4 flex items-center justify-center gap-2 font-bold text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <>
@@ -144,7 +144,7 @@ export default function AiDesigner() {
                   </>
                 ) : (
                   <>
-                    {activeTab === 'image' ? <Sparkles size={24} /> : <Video size={24} />}
+                    {activeTab === 'image' ? <Sparkles size={24} className="text-magenta-neon" /> : <Video size={24} className="text-cyan-neon" />}
                     Generate {activeTab === 'image' ? 'Design' : 'Background'}
                   </>
                 )}
@@ -155,7 +155,7 @@ export default function AiDesigner() {
             </div>
           </div>
 
-          <div className={`relative w-full max-w-3xl mx-auto glass-panel rounded-3xl overflow-hidden flex items-center justify-center ${activeTab === 'image' ? 'aspect-square' : 'aspect-video'}`}>
+          <div className={`relative w-full max-w-3xl mx-auto glassmorphism rounded-3xl overflow-hidden flex items-center justify-center border border-white/10 ${activeTab === 'image' ? 'aspect-square' : 'aspect-video'}`}>
             {activeTab === 'image' && generatedImage && (
               <motion.img
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -178,9 +178,9 @@ export default function AiDesigner() {
               />
             )}
             {((activeTab === 'image' && !generatedImage) || (activeTab === 'video' && !generatedVideo)) && (
-              <div className="text-center text-zinc-600 flex flex-col items-center gap-4 p-12">
+              <div className="text-center text-warm-white/30 flex flex-col items-center gap-4 p-12">
                 {activeTab === 'image' ? <ImageIcon size={64} /> : <Video size={64} />}
-                <p className="font-medium">Your generated {activeTab === 'image' ? 'design' : 'video'} will appear here</p>
+                <p className="font-medium font-display">Your generated {activeTab === 'image' ? 'design' : 'video'} will appear here</p>
                 {activeTab === 'video' && (
                   <p className="text-sm max-w-md opacity-70">Note: Video generation with Veo 3 can take several minutes. Please be patient after clicking generate.</p>
                 )}
